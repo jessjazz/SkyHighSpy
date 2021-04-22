@@ -11,5 +11,4 @@ public:
 	~BlueGem();
 	void Update(GameState& state) override;
 	void Draw(GameState& gState) const override;
-	static BlueGem* CreateBlueGem(Point2f pos);
 };
