@@ -9,10 +9,16 @@
 #include "Star.h"
 #include "vector"
 
+constexpr int DISPLAY_WIDTH = 1280;
+constexpr int DISPLAY_HEIGHT = 720;
+
 Agent8::Agent8(Point2f pos)
 	: GameObject(pos)
 {
 	m_pos = pos;
+	SetType(OBJ_AGENT8);
+	SetDrawOrder(2);
+	SetUpdateOrder(1);
 }
 
 Agent8::~Agent8() {}
@@ -32,10 +38,11 @@ void Agent8::Update(GameState& gState)
 	// Spawn agent 8 on an asteroid at a random xPos when game begins
 	if (GameObject::GetObjectCount(OBJ_ASTEROID) == 0 && gState.agentState == STATE_BEGIN)
 	{
-		m_pos = { rand() % 1280, 0 };
-		gState.pAsteroid = Asteroid::CreateAsteroid(m_pos);
+		m_pos = { rand() % DISPLAY_WIDTH, 0 };
+		gState.pAsteroid = new Asteroid(m_pos);
 		m_velocity = gState.pAsteroid->GetVelocity();
 		m_pos += m_velocity;
+		gState.agentState = STATE_STILL;
 	}
 
 	// Spawn increasing numbers of asteroids per game level after level 1
@@ -47,13 +54,13 @@ void Agent8::Update(GameState& gState)
 	// Spawn a meteor that is constantly moving across the screen
 	if (GameObject::GetObjectCount(OBJ_METEOR) == 0 && gState.agentState != STATE_DEAD)
 	{
-		Meteor* pMeteor = Meteor::CreateMeteor({ rand() % 1280, rand() % 720 });
+		new Meteor({ rand() % DISPLAY_WIDTH, rand() % DISPLAY_HEIGHT });
 	}
 
 	// Agent 8 dies when he collides with meteor
 	std::vector<GameObject*> meteors;
 	GameObject::GetObjectList(OBJ_METEOR, meteors);
-	for (auto meteor : meteors)
+	for (GameObject* meteor : meteors)
 	{
 		if (gState.agentState == STATE_FLY && HasCollided(m_pos, meteor->GetPosition()))
 		{
@@ -65,7 +72,7 @@ void Agent8::Update(GameState& gState)
 	
 	std::vector<GameObject*> asteroids;
 	GameObject::GetObjectList(OBJ_ASTEROID, asteroids);
-	for (auto asteroid : asteroids)
+	for (GameObject* asteroid : asteroids)
 	{
 		if (gState.agentState == STATE_FLY && HasCollided(m_pos, asteroid->GetPosition()) && asteroid->GetType() != OBJ_BROKEN)
 		{
@@ -74,27 +81,27 @@ void Agent8::Update(GameState& gState)
 			m_velocity = asteroid->GetVelocity();
 			// Reverse rotation when Agent 8 lands on an asteroid
 			m_rot += PLAY_PI;
-			gState.agentState = STATE_LEFT;
+			gState.agentState = STATE_STILL;
 		}
 		// Keep Agent 8 attached to asteroid
 		if (gState.agentState != STATE_FLY && gState.agentState != STATE_DEAD && HasCollided(m_pos, asteroid->GetPosition()) && asteroid->GetType() != OBJ_BROKEN)
 		{
 			m_pos = asteroid->GetPosition();
-			if (m_pos.y > 720)
+			if (m_pos.y > DISPLAY_HEIGHT)
 			{
 				m_pos = { m_pos.x + 25, 0 };
 			}
 			else if (m_pos.y < 0)
 			{
-				m_pos = { m_pos.x + 25, 720 };
+				m_pos = { m_pos.x + 25, DISPLAY_HEIGHT };
 			}
-			else if (m_pos.x > 1280)
+			else if (m_pos.x > DISPLAY_WIDTH)
 			{
 				m_pos = { 0, m_pos.y + 25 };
 			}
 			else if (m_pos.x < 0)
 			{
-				m_pos = { 1280, m_pos.y + 25 };
+				m_pos = { DISPLAY_WIDTH, m_pos.y + 25 };
 			}
 		}
 
@@ -109,14 +116,14 @@ void Agent8::Update(GameState& gState)
 		m_velocity.x = m_speed * sin(m_rot);
 		m_velocity.y = m_speed * -cos(m_rot);
 		m_pos += m_velocity;
-		blit.DrawStringCentred(blit.GetSpriteId("151px"), {675, 720/2}, "Game Over");
+		blit.DrawStringCentred(blit.GetSpriteId("151px"), {675, DISPLAY_HEIGHT/2}, "Game Over");
 		blit.DrawStringCentred(blit.GetSpriteId("64px"), { 650, 450 }, "Press space to play again!");
 		// Set all other GameObjects to inactive
-		for (auto gems : Gems)
+		for (GameObject* gems : Gems)
 		{
 			gems->SetActive(false);
 		}
-		for (auto a : asteroids)
+		for (GameObject* a : asteroids)
 		{
 			a->SetActive(false);
 		}
@@ -149,21 +156,21 @@ void Agent8::Update(GameState& gState)
 		m_velocity.y = m_speed * -cos(m_rot);
 
 		// Wrap around to other side of the screen
-		if (m_pos.y > 720)
+		if (m_pos.y > DISPLAY_HEIGHT)
 		{
 			m_pos = { m_pos.x, 0 };
 		}
 		else if (m_pos.y < 0)
 		{
-			m_pos = { m_pos.x, 720 };
+			m_pos = { m_pos.x, DISPLAY_HEIGHT };
 		}
-		else if (m_pos.x > 1280)
+		else if (m_pos.x > DISPLAY_WIDTH)
 		{
 			m_pos = { 0, m_pos.y };
 		}
 		else if (m_pos.x < 0)
 		{
-			m_pos = {1280, m_pos.y};
+			m_pos = { DISPLAY_WIDTH, m_pos.y};
 		}
 
 		m_pos += m_velocity;
@@ -173,53 +180,56 @@ void Agent8::Update(GameState& gState)
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				Particle::SpawnParticles(m_pos, m_velocity);
+				Particle::SpawnParticles(m_pos, m_speed, m_rot);
 			}
-			m_timerCurrent = gState.elapsedTime / 4;
+			m_timerCurrent = gState.elapsedTime / 2;
 		}
 	}
 
 
-	if (gState.agentState != STATE_FLY && gState.agentState != STATE_DEAD)
+	if (gState.agentState != STATE_FLY && gState.agentState != STATE_DEAD && gState.agentState != STATE_BEGIN)
 	{
 		// Rotate around asteroid
 		if (buff.KeyDown(VK_LEFT))
 		{
 			gState.agentState = STATE_LEFT;
-			m_rot -= 0.1f;
+			m_rot -= 0.05f;
 		}
-
-		if (buff.KeyDown(VK_RIGHT))
+		else if (buff.KeyDown(VK_RIGHT))
 		{
 			gState.agentState = STATE_RIGHT;
-			m_rot += 0.1f;
+			m_rot += 0.05f;
 		}
-
+		else 
+		{
+			gState.agentState = STATE_STILL;
+		}
+			
 		if (buff.KeyPressed(VK_SPACE))
 		{
 			gState.agentState = STATE_FLY;
 			speak.StartSound("explode", false);
 			// Spawn broken pieces of asteroid
-			BrokenAsteroid* pBrokenAsteroid1 = BrokenAsteroid::CreateBrokenAsteroid({ m_pos }, 0, {0, -15});
-			BrokenAsteroid* pBrokenAsteroid2 = BrokenAsteroid::CreateBrokenAsteroid({ m_pos }, 1, {-15, 0});
-			BrokenAsteroid* pBrokenAsteroid3 = BrokenAsteroid::CreateBrokenAsteroid({ m_pos }, 2, {2, 15});
+			new BrokenAsteroid({ m_pos }, 0, {0, -15});
+			new BrokenAsteroid({ m_pos }, 1, {-15, 0});
+			new BrokenAsteroid({ m_pos }, 2, {2, 15});
 			m_KeyPressedTime = gState.time; // Capture key pressed time used to avoid immediately colliding with gems
 			// Spawn random pickups
 			int RandRoll{ GameObject::RandomRoll(8) };
 			if (RandRoll != 1 && RandRoll != 8)
 			{
-				Gem* pGem = Gem::CreateGem({ m_pos.x, m_pos.y});
+				new Gem({ m_pos.x, m_pos.y});
 			}
 			else if (RandRoll == 1)
 			{
-				BlueGem* pBlueGem = BlueGem::CreateBlueGem({ m_pos.x, m_pos.y });
+				new BlueGem({ m_pos.x, m_pos.y });
 			}
 			else if (RandRoll == 8)
 			{
-				Star* pStar = Star::CreateStar({ m_pos.x, m_pos.y });
+				new Star({ m_pos.x, m_pos.y });
 			}
 			// Set asteroid to inactive after Agent 8 jumps off
-			for (auto asteroid : asteroids)
+			for (GameObject* asteroid : asteroids)
 			{
 				if (asteroid->GetType() == OBJ_ASTEROID && HasCollided(m_pos, asteroid->GetPosition()))
 				{
@@ -237,13 +247,16 @@ void Agent8::Draw(GameState& gState) const
 	switch (gState.agentState)
 	{
 	case STATE_BEGIN:
-		blit.DrawRotated(blit.GetSpriteId("agent8_left"), m_pos, 5.0f * gState.time, m_rot);
+		blit.DrawRotated(blit.GetSpriteId("agent8_left"), m_pos, 0, m_rot);
+		break;
+	case STATE_STILL:
+		blit.DrawRotated(blit.GetSpriteId("agent8_left"), m_pos, 0, m_rot);
 		break;
 	case STATE_LEFT:
-		blit.DrawRotated(blit.GetSpriteId("agent8_left"), m_pos, 5.0f * gState.time, m_rot);
+		blit.DrawRotated(blit.GetSpriteId("agent8_left"), m_pos, 18.0f * gState.time, m_rot);
 		break;
 	case STATE_RIGHT:
-		blit.DrawRotated(blit.GetSpriteId("agent8_right"), m_pos, 5.0f * gState.time, m_rot);
+		blit.DrawRotated(blit.GetSpriteId("agent8_right"), m_pos, 18.0f * gState.time, m_rot);
 		break;
 	case STATE_FLY:
 		blit.DrawRotated(blit.GetSpriteId("agent8_fly"), m_pos, 0, m_rot);
@@ -252,14 +265,4 @@ void Agent8::Draw(GameState& gState) const
 		blit.DrawRotated(blit.GetSpriteId("agent8_dead"), m_pos, 5.0f * gState.time, m_rot);
 		break;
 	}
-}
-
-Agent8* Agent8::CreateAgent8(Point2f pos)
-{
-	Agent8* pAgent8{ nullptr };
-	pAgent8 = new Agent8(pos);
-	pAgent8->SetType(OBJ_AGENT8);
-	pAgent8->SetDrawOrder(2);
-	pAgent8->SetUpdateOrder(1);
-	return pAgent8;
 }
