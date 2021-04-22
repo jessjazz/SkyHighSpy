@@ -8,6 +8,9 @@ Star::Star(Point2f pos)
 	: Gem(pos)
 {
 	m_pos = pos;
+	SetType(OBJ_GEM);
+	SetDrawOrder(5);
+	SetUpdateOrder(5);
 }
 
 Star::~Star() {}
@@ -19,18 +22,20 @@ void Star::Update(GameState& gState)
 
 	for (GameObject* p : s_vUpdateList)
 	{
-		Agent8* a8 = dynamic_cast<Agent8*>(p);
-
-		if (a8 != nullptr)
+		if (p->GetType() == OBJ_AGENT8)
 		{
-			if (HasCollided(m_pos, a8->GetPosition()) && gState.agentState == STATE_FLY && gState.time > a8->GetKeyPressedTime() + m_gemSpawnDelay)
+			Agent8* a8 = static_cast<Agent8*>(p);
+			if (a8 != nullptr)
 			{
-				speak.StartSound("reward", false);
-				gState.score += 5000;
-				a8->SetSpeed(8.f); // Reset speed to 8 for when blue gem is active 
-				Ring::SpawnRings(m_pos);
-				m_active = false;
+				if (HasCollided(m_pos, a8->GetPosition()) && gState.agentState == STATE_FLY && gState.time > a8->GetKeyPressedTime() + m_gemSpawnDelay)
+				{
+					speak.StartSound("reward", false);
+					gState.score += 5000;
+					a8->SetSpeed(8.f); // Reset speed to 8 for when blue gem is active 
+					Ring::SpawnRings(m_pos);
+					m_active = false;
 
+				}
 			}
 		}
 	}
@@ -42,14 +47,4 @@ void Star::Draw(GameState& gState) const
 
 	float rotWobble = sin(gState.time * 3);
 	blit.DrawRotated(blit.GetSpriteId("star"), m_pos, 0, m_rot + rotWobble / 2);
-}
-
-Star* Star::CreateStar(Point2f pos)
-{
-	Star* pStar{ nullptr };
-	pStar = new Star({ pos });
-	pStar->SetType(OBJ_GEM);
-	pStar->SetDrawOrder(5);
-	pStar->SetUpdateOrder(5);
-	return pStar;
 }
