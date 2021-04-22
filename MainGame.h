@@ -9,6 +9,7 @@ class Particle;
 enum Agent8State
 {
 	STATE_BEGIN = 0,
+	STATE_STILL,
 	STATE_LEFT,
 	STATE_RIGHT,
 	STATE_FLY,
