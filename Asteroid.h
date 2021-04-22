@@ -10,7 +10,6 @@ public:
 	~Asteroid();
 	void Update(GameState& gState) override;
 	void Draw(GameState& gState) const override;
-	static Asteroid* CreateAsteroid(Point2f pos);
 	static void SpawnAsteroids(GameState& gState);
 	bool HasAsteroidCollided(Point2f pos1, Point2f pos2);
 	void HandleCollision();

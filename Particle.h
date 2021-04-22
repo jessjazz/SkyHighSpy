@@ -10,8 +10,10 @@ public:
 	~Particle();
 	void Update(GameState& gState) override;
 	void Draw(GameState& gState) const override;
-	static Particle* CreateParticle(Point2f pos);
-	static void SpawnParticles(Point2f pos, Vector2f velocity);
+	static void SpawnParticles(Point2f pos, float speed, float rotation);
+
+	void SetLife(float life) { m_lifeTime = life; }
+	void SetRemainingLife(float remainingLife) { m_remainingLife = remainingLife; }
 
 protected:
 	float m_lifeTime{75.f};
@@ -20,6 +22,7 @@ protected:
 	float m_alpha{ m_originalAlpha };
 	float m_originalScale{ 0.75f };
 	float m_scale{ m_originalScale };
+	Vector2f m_velocityVariation = {3.0f, 1.0f};
 	bool m_isDead{ false };
 	static std::vector<Particle*> s_vParticles;
 	static int m_particleIndex;

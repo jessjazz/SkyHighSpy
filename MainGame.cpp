@@ -27,7 +27,7 @@ int WINAPI WinMain( PLAY_WINARGS_IN )
 	blit.SetSpriteOrigin(blit.GetSpriteId("agent8_left"), { 50, 110 });
 	blit.SetSpriteOrigin(blit.GetSpriteId("agent8_right"), { 50, 110 });
 	blit.SetSpriteOrigin(blit.GetSpriteId("agent8_fly"), { 60, 100 });
-	gState.agent8 = Agent8::CreateAgent8({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 });
+	gState.agent8 = new Agent8({ DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2 });
 
 	return buff.HandleWindows( PLAY_WINARGS_OUT, L"Sky-High Spy" );
 }

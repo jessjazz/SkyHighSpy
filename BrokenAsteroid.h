@@ -7,11 +7,10 @@
 class BrokenAsteroid : public Asteroid
 {
 public:
-	BrokenAsteroid(Point2f pos);
+	BrokenAsteroid(Point2f pos, int frameIndex, Vector2f velocity);
 	~BrokenAsteroid();
 	void Update(GameState& gState) override;
 	void Draw(GameState& gState) const override;
-	static BrokenAsteroid* CreateBrokenAsteroid(Point2f pos, int frameIndex, Vector2f velocity);
 
 	int GetFrameIndex() { return m_frameIndex; }
 	void SetFrameIndex(int frameIndex) { m_frameIndex = frameIndex; }

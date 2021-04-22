@@ -1,9 +1,17 @@
 #include "BrokenAsteroid.h"
 
-BrokenAsteroid::BrokenAsteroid(Point2f pos)
+constexpr int DISPLAY_WIDTH = 1280;
+constexpr int DISPLAY_HEIGHT = 720;
+
+BrokenAsteroid::BrokenAsteroid(Point2f pos, int frameIndex, Vector2f velocity)
 	: Asteroid(pos)
 {
 	m_pos = pos;
+	SetType(OBJ_BROKEN);
+	SetDrawOrder(1);
+	SetUpdateOrder(4);
+	SetVelocity({ velocity });
+	SetFrameIndex(frameIndex);
 }
 
 BrokenAsteroid::~BrokenAsteroid() {}
@@ -12,7 +20,7 @@ void BrokenAsteroid::Update(GameState& gState)
 {
 	m_rot = 0.f;
 	// Set to inactive if off screen
-	if (m_pos.y > 720 || m_pos.y < 0 || m_pos.x > 1280 || m_pos.x < 0)
+	if (m_pos.y > DISPLAY_HEIGHT || m_pos.y < 0 || m_pos.x > DISPLAY_WIDTH || m_pos.x < 0)
 	{
 		m_active = false;
 	}
@@ -24,16 +32,4 @@ void BrokenAsteroid::Draw(GameState& gState) const
 	PlayBlitter& blit = PlayBlitter::Instance();
 
 	blit.DrawRotated(blit.GetSpriteId("asteroid_pieces"), m_pos, m_frameIndex, m_rot);
-}
-
-BrokenAsteroid* BrokenAsteroid::CreateBrokenAsteroid(Point2f pos, int frameIndex, Vector2f velocity)
-{
-	BrokenAsteroid* pBrokenAsteroid{ nullptr };
-	pBrokenAsteroid = new BrokenAsteroid({ pos });
-	pBrokenAsteroid->SetType(OBJ_BROKEN);
-	pBrokenAsteroid->SetDrawOrder(1);
-	pBrokenAsteroid->SetUpdateOrder(4);
-	pBrokenAsteroid->SetVelocity({velocity});
-	pBrokenAsteroid->SetFrameIndex(frameIndex);
-	return pBrokenAsteroid;
 }

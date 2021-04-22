@@ -9,6 +9,9 @@ BlueGem::BlueGem(Point2f pos)
 	: Gem(pos)
 {
 	m_pos = pos;
+	SetType(OBJ_GEM);
+	SetDrawOrder(5);
+	SetUpdateOrder(5);
 }
 
 BlueGem::~BlueGem() {}
@@ -20,18 +23,20 @@ void BlueGem::Update(GameState& gState)
 
 	for (GameObject* p : s_vUpdateList)
 	{
-		Agent8* a8 = dynamic_cast<Agent8*>(p);
-
-		if (a8 != nullptr)
+		if (p->GetType() == OBJ_AGENT8)
 		{
-			if (HasCollided(m_pos, a8->GetPosition()) && gState.agentState == STATE_FLY && gState.time > a8->GetKeyPressedTime() + m_gemSpawnDelay)
+			Agent8* a8 = static_cast<Agent8*>(p);
+			if (a8 != nullptr)
 			{
-				speak.StartSound("reward", false);
-				gState.score += 1000;
-				a8->SetSpeed(a8->GetSpeed() * 1.5f);	// Increase speed until another pickup is activated
-				Ring::SpawnRings(m_pos);
-				m_active = false;
+				if (HasCollided(m_pos, a8->GetPosition()) && gState.agentState == STATE_FLY && gState.time > a8->GetKeyPressedTime() + m_gemSpawnDelay)
+				{
+					speak.StartSound("reward", false);
+					gState.score += 1000;
+					a8->SetSpeed(a8->GetSpeed() * 1.5f);	// Increase speed until another pickup is activated
+					Ring::SpawnRings(m_pos);
+					m_active = false;
 
+				}
 			}
 		}
 	}
@@ -43,14 +48,4 @@ void BlueGem::Draw(GameState& gState) const
 
 	float rotWobble = sin(gState.time * 3);
 	blit.DrawRotated(blit.GetSpriteId("gem_blue"), m_pos, 0, m_rot + rotWobble / 2);
-}
-
-BlueGem* BlueGem::CreateBlueGem(Point2f pos)
-{
-	BlueGem* pBlueGem{ nullptr };
-	pBlueGem = new BlueGem({ pos });
-	pBlueGem->SetType(OBJ_GEM);
-	pBlueGem->SetDrawOrder(5);
-	pBlueGem->SetUpdateOrder(5);
-	return pBlueGem;
 }

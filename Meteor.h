@@ -10,7 +10,6 @@ public:
 	~Meteor();
 	void Update(GameState& gState) override;
 	void Draw(GameState& gState) const override;
-	static Meteor* CreateMeteor(Point2f pos);
 
 	float GetRotation() const { return m_rot; }
 	void SetRotation(float rot) { m_rot = rot; }
