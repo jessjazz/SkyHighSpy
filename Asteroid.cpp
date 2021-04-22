@@ -2,10 +2,19 @@
 #include "MainGame.h"
 #include "Asteroid.h"
 
+constexpr int DISPLAY_WIDTH = 1280;
+constexpr int DISPLAY_HEIGHT = 720;
+
 Asteroid::Asteroid(Point2f pos)
 	: GameObject(pos)
 {
 	m_pos = pos;
+	SetType(OBJ_ASTEROID);
+	SetDrawOrder(3);
+	SetUpdateOrder(2);
+	SetMass(100.f);
+	SetVelocity({ rand() % 3 + (-1), rand() % 3 + 2 });
+	SetRotation(atan2(m_velocity.y, m_velocity.x));
 }
 
 Asteroid::~Asteroid()
@@ -15,21 +24,21 @@ void Asteroid::Update(GameState& gState)
 {	
 	PlayBuffer& buff = PlayBuffer::Instance();
 	// If asteroid goes off the screen, move it to the opposite side of the screen +25px
-	if (m_pos.y > 720)
+	if (m_pos.y > DISPLAY_HEIGHT)
 	{
 		m_pos = { m_pos.x + 25, 0 };
 	}
 	else if (m_pos.y < 0)
 	{
-		m_pos = { m_pos.x + 25, 720 };
+		m_pos = { m_pos.x + 25, DISPLAY_HEIGHT };
 	}
-	else if (m_pos.x > 1280)
+	else if (m_pos.x > DISPLAY_WIDTH)
 	{
 		m_pos = { 0, m_pos.y + 25 };
 	}
 	else if (m_pos.x < 0)
 	{
-		m_pos = { 1280, m_pos.y + 25 };
+		m_pos = { DISPLAY_WIDTH, m_pos.y + 25 };
 	}
 
 	// Handle collision with other asteroids
@@ -48,19 +57,6 @@ void Asteroid::Draw(GameState& gState) const
 	blit.DrawRotated(blit.GetSpriteId("asteroid"), m_pos, 5.0f * gState.time, m_rot);
 }
 
-Asteroid* Asteroid::CreateAsteroid(Point2f pos)
-{
-	Asteroid* pAsteroid{ nullptr };
-	pAsteroid = new Asteroid({pos});
-	pAsteroid->SetType(OBJ_ASTEROID);
-	pAsteroid->SetDrawOrder(3);
-	pAsteroid->SetUpdateOrder(2);
-	pAsteroid->SetMass(100.f);
-	pAsteroid->SetVelocity({ rand() % 3 + (-1), rand() % 3 + 2 });
-	pAsteroid->SetRotation(atan2(pAsteroid->GetVelocity().y, pAsteroid->GetVelocity().x));
-	return pAsteroid;
-}
-
 void Asteroid::SpawnAsteroids(GameState& gState)
 {
 	PlayBlitter& blit = PlayBlitter::Instance();
@@ -70,19 +66,19 @@ void Asteroid::SpawnAsteroids(GameState& gState)
 
 	for (int i = 0; i < gState.level + 1; i++)
 	{
-		Asteroid* pAsteroid = CreateAsteroid({ rand() % 1280, rand() % 2 + (-2) });
+		new Asteroid({ rand() % DISPLAY_WIDTH, rand() % 2 + (-2) });
 		bool done{ false };
 		// Check if any asteroids exist at the randomly generated xPos so they won't spawn on top of each other
 		if (GameObject::GetObjectCount(OBJ_ASTEROID) != 0)
 		{
-			for (auto asteroid : asteroids)
+			for (GameObject* asteroid : asteroids)
 			{
 				while (!done)
 				{
-					int xPos = rand() % 1280;
+					int xPos = rand() % DISPLAY_WIDTH;
 					if (xPos <= asteroid->GetPosition().x - 100 || xPos >= asteroid->GetPosition().x + 100)
 					{
-						Asteroid* pAsteroid = CreateAsteroid({ xPos, 0 });
+						new Asteroid({ xPos, 0 });
 						done = true;
 					}
 					else
