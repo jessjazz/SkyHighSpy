@@ -10,7 +10,6 @@ public:
 	~Gem();
 	void Update(GameState& state) override;
 	void Draw(GameState& gState) const override;
-	static Gem* CreateGem(Point2f pos);
 
 protected:
 	float m_rot{0.f};
