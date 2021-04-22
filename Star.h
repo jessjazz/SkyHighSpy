@@ -11,5 +11,4 @@ public:
 	~Star();
 	void Update(GameState& state) override;
 	void Draw(GameState& gState) const override;
-	static Star* CreateStar(Point2f pos);
 };
